@@ -88,14 +88,18 @@ function submitSite(payload) {
     const sheet = getRegistrySheet();
     const now = new Date();
 
-    sheet.appendRow([
+    const nextRow = getNextRegistryRow(sheet);
+
+    sheet.getRange(nextRow, 1, 1, HEADERS.length).setValues([[
       username,
       pastedUrl,
       sheetId,
       false,
       now,
       now
-    ]);
+    ]]);
+    sheet.getRange(nextRow, 4).insertCheckboxes();
+    sheet.getRange(nextRow, 5, 1, 2).setNumberFormat("yyyy-mm-dd h:mm AM/PM");
 
     formatRegistrySheet(sheet);
 
@@ -156,14 +160,31 @@ function formatRegistrySheet(sheet) {
     .setBackground("#111827")
     .setFontColor("#ffffff")
     .setFontWeight("bold");
-  sheet.getRange("D2:D1000").insertCheckboxes();
-  sheet.getRange("E2:F1000").setNumberFormat("yyyy-mm-dd h:mm AM/PM");
+  const lastDataRow = Math.max(2, getLastUsernameRow(sheet));
+  sheet.getRange(2, 4, lastDataRow - 1, 1).insertCheckboxes();
+  sheet.getRange(2, 5, lastDataRow - 1, 2).setNumberFormat("yyyy-mm-dd h:mm AM/PM");
   sheet.setColumnWidth(1, 140);
   sheet.setColumnWidth(2, 420);
   sheet.setColumnWidth(3, 310);
   sheet.setColumnWidth(4, 110);
   sheet.setColumnWidth(5, 190);
   sheet.setColumnWidth(6, 190);
+}
+
+function getNextRegistryRow(sheet) {
+  return getLastUsernameRow(sheet) + 1;
+}
+
+function getLastUsernameRow(sheet) {
+  const values = sheet.getRange(1, 1, sheet.getMaxRows(), 1).getValues();
+
+  for (let index = values.length - 1; index >= 1; index -= 1) {
+    if (String(values[index][0] || "").trim()) {
+      return index + 1;
+    }
+  }
+
+  return 1;
 }
 
 function normalizeUsername(value) {
