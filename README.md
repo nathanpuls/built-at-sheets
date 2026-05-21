@@ -10,6 +10,10 @@ npm start
 
 Open `http://127.0.0.1:4175`.
 
+## Cloudflare Pages
+
+Production deploys from the `main` branch to `https://built-at-sheets.pages.dev`.
+
 ## Routing
 
 - `/` renders the built.at marketing page.
