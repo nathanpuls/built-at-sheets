@@ -556,39 +556,31 @@
       };
     }
 
-    function loadGviz(sheetId, sheetName, range) {
-      return new Promise((resolve, reject) => {
-        const callbackName = `builtAtSheet_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-        const script = document.createElement("script");
-        const url =
-          `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq` +
-          `?tqx=${encodeURIComponent(`responseHandler:${callbackName};out:json`)}` +
-          `&sheet=${encodeURIComponent(sheetName)}` +
-          `&range=${encodeURIComponent(range)}`;
-
-        window[callbackName] = (data) => {
-          cleanup();
-          if (data.status === "error") {
-            reject(new Error(data.errors?.map((error) => error.detailed_message || error.message).join("; ") || "Google Sheets returned an error."));
-            return;
-          }
-          resolve(data);
-        };
-
-        function cleanup() {
-          delete window[callbackName];
-          script.remove();
-        }
-
-        script.src = url;
-        script.async = true;
-        script.onerror = () => {
-          cleanup();
-          reject(new Error("Google Sheets script load failed."));
-        };
-
-        document.head.appendChild(script);
+    async function loadGviz(sheetId, sheetName, range) {
+      const url =
+        `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq` +
+        `?tqx=${encodeURIComponent("out:json")}` +
+        `&sheet=${encodeURIComponent(sheetName)}` +
+        `&range=${encodeURIComponent(range)}`;
+      const response = await fetch(url, {
+        cache: "no-store"
       });
+
+      if (!response.ok) {
+        throw new Error(`Google Sheets returned HTTP ${response.status}.`);
+      }
+
+      const text = await response.text();
+      const jsonText = text
+        .replace(/^[\s\S]*?google\.visualization\.Query\.setResponse\(/, "")
+        .replace(/\);\s*$/, "");
+      const data = JSON.parse(jsonText);
+
+      if (data.status === "error") {
+        throw new Error(data.errors?.map((error) => error.detailed_message || error.message).join("; ") || "Google Sheets returned an error.");
+      }
+
+      return data;
     }
 
     function tableRows(data) {
@@ -1137,7 +1129,6 @@
       }
 
       try {
-        showStatus("Loading site", `Looking up <code>${escapeHtml(username)}</code> in the built.at registry.`);
         const registryData = await loadGviz(CONFIG.masterSheetId, CONFIG.masterSheetName, CONFIG.masterRange);
         const registryRows = tableRows(registryData).filter((row) => {
           return !isHeaderRow(row, ["username", "pasted_sheet_url", "sheet_id"]);
