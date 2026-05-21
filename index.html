@@ -507,7 +507,7 @@
     const CONFIG = {
       masterSheetId: "1gL740Jji_spSBGuTqcoScqJOI6usz0J1vzn2s3x5hQg",
       masterSheetName: "Registry",
-      masterRange: "A:C",
+      masterRange: "A:F",
       userSheetName: "Sheet1",
       userRange: "A:D",
       cacheMs: 30000,
@@ -548,6 +548,10 @@
       return expectedHeaders.every((header, index) => {
         return String(row[index] || "").trim().toLowerCase() === header;
       });
+    }
+
+    function booleanCell(value) {
+      return String(value || "").trim().toLowerCase() === "true";
     }
 
     function getRoute() {
@@ -1155,13 +1159,24 @@
 
       try {
         const registryData = await loadGviz(CONFIG.masterSheetId, CONFIG.masterSheetName, CONFIG.masterRange);
-        const registryRows = tableRows(registryData).filter((row) => {
+        const rawRegistryRows = tableRows(registryData);
+        const headerRow = rawRegistryRows.find((row) => isHeaderRow(row, ["username", "pasted_sheet_url", "sheet_id"])) || [];
+        const hiddenColumn = headerRow.findIndex((cell) => String(cell || "").trim().toLowerCase() === "hidden");
+        const activeColumn = headerRow.findIndex((cell) => String(cell || "").trim().toLowerCase() === "active");
+        const registryRows = rawRegistryRows.filter((row) => {
           return !isHeaderRow(row, ["username", "pasted_sheet_url", "sheet_id"]);
         });
         const match = registryRows.find((row) => String(row[0] || "").trim().toLowerCase() === username.toLowerCase());
 
         if (!match) {
           showStatus("Site not found", `No active built.at site was found for <code>${escapeHtml(username)}</code>.`);
+          return;
+        }
+
+        const isHidden = hiddenColumn >= 0 && booleanCell(match[hiddenColumn]);
+        const isInactive = activeColumn >= 0 && !booleanCell(match[activeColumn]);
+        if (isHidden || isInactive) {
+          showStatus("Site not available", `This built.at site is not currently public.`);
           return;
         }
 
