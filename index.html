@@ -475,6 +475,148 @@
       font-weight: 650;
     }
 
+    .claim-shell {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 42px 24px;
+    }
+
+    .claim-content {
+      width: min(100%, 760px);
+    }
+
+    .claim-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 36px;
+      font-size: 22px;
+      font-weight: 760;
+    }
+
+    .claim-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .claim-content h1 {
+      max-width: 720px;
+      margin: 0 0 14px;
+      font-size: clamp(38px, 7vw, 66px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .claim-content p {
+      max-width: 650px;
+      margin: 0 0 28px;
+      color: var(--muted);
+      font-size: 19px;
+    }
+
+    .claim-form {
+      display: grid;
+      gap: 18px;
+      margin-top: 34px;
+      padding-top: 30px;
+      border-top: 1px solid var(--border);
+    }
+
+    .claim-form label {
+      display: grid;
+      gap: 8px;
+      font-weight: 680;
+    }
+
+    .claim-form label span {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .claim-username-field {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      min-height: 54px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .claim-prefix {
+      align-self: stretch;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 14px;
+      color: var(--muted);
+      background: var(--soft);
+      border-right: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .claim-form input {
+      width: 100%;
+      min-height: 54px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      color: var(--text);
+      font: inherit;
+      outline: none;
+    }
+
+    .claim-username-field input {
+      min-height: 52px;
+      border: 0;
+      border-radius: 0;
+    }
+
+    .claim-form input:focus,
+    .claim-username-field:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px #dbeafe;
+    }
+
+    .claim-availability {
+      min-height: 22px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .claim-availability.ok,
+    .claim-message.success {
+      color: #166534;
+    }
+
+    .claim-availability.error,
+    .claim-message.error {
+      color: #b91c1c;
+    }
+
+    .claim-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .claim-form button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .claim-message {
+      min-height: 28px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
     @media (max-width: 800px) {
       .nav-links {
         display: none;
@@ -497,6 +639,21 @@
       .pricing {
         padding: 32px;
       }
+
+      .claim-shell {
+        align-items: start;
+        padding-top: 36px;
+      }
+
+      .claim-username-field {
+        grid-template-columns: 1fr;
+      }
+
+      .claim-prefix {
+        min-height: 42px;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
     }
   </style>
 </head>
@@ -510,7 +667,7 @@
       masterRange: "A:F",
       userSheetName: "Sheet1",
       userRange: "A:D",
-      signupUrl: "https://script.google.com/macros/s/AKfycbzRDNrYYSEdu4pXTVMRtjuVmRzJK9htqPkgj6wyvG2nG_CEkv5nW6Q2zKIbu7DCHJSy/exec",
+      signupUrl: "/app/claim",
       cacheMs: 30000,
       allowRawHtml: true
     };
@@ -561,6 +718,10 @@
         username: parts[0] || "",
         slug: normalizeSlug(parts.slice(1).join("/") || "index")
       };
+    }
+
+    function isAppRoute(route, slug) {
+      return route.username === "app" && route.slug === slug;
     }
 
     async function loadGviz(sheetId, sheetName, range) {
@@ -1148,6 +1309,135 @@
       `;
     }
 
+    function renderClaimPage() {
+      app.innerHTML = `
+        <main class="claim-shell">
+          <section class="claim-content">
+            <a class="claim-brand" href="/"><span class="claim-dot"></span> built.at</a>
+            <h1>Claim a name for your Sheet-powered site.</h1>
+            <p>
+              Pick a short username, paste your public Google Sheet link, and built.at
+              will turn that Sheet into a simple website.
+            </p>
+
+            <form class="claim-form" id="claim-form">
+              <label>
+                Username
+                <span>Use 3-24 letters and numbers. No spaces or symbols.</span>
+                <div class="claim-username-field">
+                  <div class="claim-prefix">built.at/</div>
+                  <input name="username" id="claim-username" autocomplete="username" inputmode="latin" maxlength="24" pattern="[A-Za-z0-9]{3,24}" placeholder="yourname" required>
+                </div>
+                <div class="claim-availability" id="claim-availability" aria-live="polite"></div>
+              </label>
+
+              <label>
+                Public Google Sheet URL
+                <span>In Google Sheets, share it as anyone with the link can view, then paste that link here.</span>
+                <input name="sheetUrl" id="claim-sheet-url" inputmode="url" placeholder="https://docs.google.com/spreadsheets/d/..." required>
+              </label>
+
+              <div class="claim-actions">
+                <button type="submit" class="button" id="claim-submit" disabled>Claim name</button>
+                <div class="claim-message" id="claim-message" aria-live="polite"></div>
+              </div>
+            </form>
+          </section>
+        </main>
+      `;
+
+      setupClaimForm();
+    }
+
+    function setupClaimForm() {
+      const form = document.getElementById("claim-form");
+      const usernameInput = document.getElementById("claim-username");
+      const sheetUrlInput = document.getElementById("claim-sheet-url");
+      const availability = document.getElementById("claim-availability");
+      const message = document.getElementById("claim-message");
+      const submitButton = document.getElementById("claim-submit");
+      let availabilityTimer = 0;
+      let usernameAvailable = false;
+
+      function normalizeUsername(value) {
+        return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+      }
+
+      function setAvailability(text, state) {
+        availability.textContent = text;
+        availability.className = `claim-availability ${state || ""}`.trim();
+      }
+
+      function setMessage(text, state) {
+        message.textContent = text;
+        message.className = `claim-message ${state || ""}`.trim();
+      }
+
+      function updateSubmitState() {
+        submitButton.disabled = !usernameAvailable || !sheetUrlInput.value.trim();
+      }
+
+      usernameInput.addEventListener("input", () => {
+        const normalized = normalizeUsername(usernameInput.value);
+        if (usernameInput.value !== normalized) usernameInput.value = normalized;
+
+        usernameAvailable = false;
+        updateSubmitState();
+        window.clearTimeout(availabilityTimer);
+
+        if (!normalized) {
+          setAvailability("", "");
+          return;
+        }
+
+        setAvailability("Checking...", "");
+        availabilityTimer = window.setTimeout(async () => {
+          try {
+            const response = await fetch(`/api/check-username?username=${encodeURIComponent(normalized)}`);
+            const result = await response.json();
+            usernameAvailable = Boolean(result.available);
+            setAvailability(result.message, result.available ? "ok" : "error");
+          } catch {
+            usernameAvailable = false;
+            setAvailability("Could not check that name right now.", "error");
+          }
+          updateSubmitState();
+        }, 300);
+      });
+
+      sheetUrlInput.addEventListener("input", updateSubmitState);
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        submitButton.disabled = true;
+        setMessage("Saving...", "");
+
+        try {
+          const response = await fetch("/api/register", {
+            method: "POST",
+            headers: {
+              "content-type": "application/json"
+            },
+            body: JSON.stringify(Object.fromEntries(new FormData(form)))
+          });
+          const result = await response.json();
+
+          if (!response.ok || !result.ok) {
+            throw new Error(result.message || "Could not claim that name.");
+          }
+
+          setMessage(`Saved. Your site will be built.at/${result.username}.`, "success");
+          form.reset();
+          usernameAvailable = false;
+          setAvailability("", "");
+        } catch (error) {
+          setMessage(error.message || String(error), "error");
+        }
+
+        updateSubmitState();
+      });
+    }
+
     async function renderUserPage(username, slug) {
       if (!CONFIG.masterSheetId) {
         showStatus(
@@ -1226,6 +1516,8 @@
     const route = getRoute();
     if (!route.username) {
       renderMarketingPage();
+    } else if (isAppRoute(route, "claim")) {
+      renderClaimPage();
     } else {
       renderUserPage(route.username, route.slug);
     }

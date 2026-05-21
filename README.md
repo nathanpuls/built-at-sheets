@@ -17,6 +17,7 @@ Production deploys from the `main` branch to `https://built-at-sheets.pages.dev`
 ## Routing
 
 - `/` renders the built.at marketing page.
+- `/app/claim` renders the built.at-branded signup form.
 - `/:username` renders the user's `index` page.
 - `/:username/:slug` renders the matching slug from the user's Sheet.
 
@@ -47,14 +48,18 @@ Each user Sheet should be shared as `Anyone with the link can view`.
 
 Column A can be HTML, Markdown, or a simple redirect URL. Column B is the page slug.
 
-## Apps Script Signup
+## Signup
 
-The `apps-script` folder contains a branded Google Apps Script web app:
+The public signup form is served by Cloudflare Pages at `/app/claim`.
 
-- `Code.gs` validates usernames, checks availability, extracts Sheet IDs, and appends rows to the active spreadsheet's `Registry` tab.
-- `Index.html` is the branded signup UI with live availability feedback.
+Cloudflare Pages Functions handle:
 
-Open Apps Script from the registry Sheet, add both files, then deploy as a web app.
+- `/api/check-username`
+- `/api/register`
+
+The `apps-script` folder contains the private backend that writes registrations into the active spreadsheet's `Registry` tab.
+
+Open Apps Script from the registry Sheet, add `Code.gs`, then deploy as a web app. Users do not visit the Apps Script URL directly.
 
 Username rules:
 

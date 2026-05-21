@@ -3,12 +3,37 @@ const HEADERS = ["username", "pasted_sheet_url", "sheet_id", "hidden", "created_
 const USERNAME_MIN_LENGTH = 3;
 const USERNAME_MAX_LENGTH = 24;
 const USERNAME_PATTERN = /^[a-z0-9]+$/;
+const RESERVED_USERNAMES = ["app", "api", "admin", "www", "mail", "help", "support", "claim", "login", "signup"];
 
 function doGet() {
   return HtmlService
     .createHtmlOutputFromFile("Index")
     .setTitle("Claim a built.at name")
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+function doPost(event) {
+  try {
+    const payload = JSON.parse(event.postData.contents || "{}");
+
+    if (payload.action === "checkUsername") {
+      return jsonResponse(checkUsername(payload.username));
+    }
+
+    if (payload.action === "register") {
+      return jsonResponse(submitSite(payload));
+    }
+
+    return jsonResponse({
+      ok: false,
+      message: "Unknown action."
+    });
+  } catch (error) {
+    return jsonResponse({
+      ok: false,
+      message: error.message || String(error)
+    });
+  }
 }
 
 function checkUsername(value) {
@@ -177,10 +202,23 @@ function validateUsername(username) {
     };
   }
 
+  if (RESERVED_USERNAMES.indexOf(username) >= 0) {
+    return {
+      ok: false,
+      message: "That name is reserved."
+    };
+  }
+
   return {
     ok: true,
     message: ""
   };
+}
+
+function jsonResponse(value) {
+  return ContentService
+    .createTextOutput(JSON.stringify(value))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function extractSheetId(value) {
