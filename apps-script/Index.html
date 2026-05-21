@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Start with built.at</title>
+  <style>
+    :root {
+      --text: #111827;
+      --muted: #657083;
+      --border: #e5e7eb;
+      --soft: #f8fafc;
+      --accent: #2563eb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: #fff;
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.6;
+      letter-spacing: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    main {
+      width: min(100%, 720px);
+    }
+
+    .brand {
+      font-size: 22px;
+      font-weight: 760;
+      margin-bottom: 34px;
+    }
+
+    h1 {
+      margin: 0 0 14px;
+      font-size: clamp(36px, 7vw, 64px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 28px;
+      color: var(--muted);
+      font-size: 19px;
+    }
+
+    form {
+      display: grid;
+      gap: 16px;
+      margin-top: 30px;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      font-weight: 650;
+    }
+
+    span {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    input {
+      width: 100%;
+      min-height: 52px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      color: var(--text);
+      font: inherit;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px #dbeafe;
+    }
+
+    button {
+      justify-self: start;
+      min-height: 48px;
+      border: 1px solid var(--text);
+      border-radius: 999px;
+      padding: 12px 20px;
+      background: var(--text);
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .message {
+      min-height: 28px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .message.error {
+      color: #b91c1c;
+    }
+
+    .message.success {
+      color: #166534;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="brand">built.at</div>
+    <h1>Claim a simple website powered by your Sheet.</h1>
+    <p>
+      Pick a username and paste the public Google Sheet link. built.at will keep
+      the clean Sheet ID behind the scenes.
+    </p>
+
+    <form id="site-form">
+      <label>
+        Username
+        <span>Your site path will be built.at/username.</span>
+        <input name="username" autocomplete="username" placeholder="nathan" required>
+      </label>
+
+      <label>
+        Public Google Sheet URL
+        <span>Use the sharing link from Google Sheets after setting it to anyone with the link can view.</span>
+        <input name="sheetUrl" inputmode="url" placeholder="https://docs.google.com/spreadsheets/d/..." required>
+      </label>
+
+      <button type="submit">Submit site</button>
+      <div class="message" id="message" aria-live="polite"></div>
+    </form>
+  </main>
+
+  <script>
+    const form = document.getElementById("site-form");
+    const message = document.getElementById("message");
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const data = Object.fromEntries(new FormData(form));
+      message.className = "message";
+      message.textContent = "Submitting...";
+
+      google.script.run
+        .withSuccessHandler((result) => {
+          message.className = "message success";
+          message.textContent = `Saved. Your path will be built.at/${result.username}.`;
+          form.reset();
+        })
+        .withFailureHandler((error) => {
+          message.className = "message error";
+          message.textContent = error.message || String(error);
+        })
+        .submitSite(data);
+    });
+  </script>
+</body>
+</html>
