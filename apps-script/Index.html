@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Start with built.at</title>
+  <title>Claim a built.at name</title>
   <style>
     :root {
       --text: #111827;
@@ -11,6 +11,8 @@
       --border: #e5e7eb;
       --soft: #f8fafc;
       --accent: #2563eb;
+      --success: #166534;
+      --danger: #b91c1c;
     }
 
     * {
@@ -23,7 +25,7 @@
       display: grid;
       place-items: center;
       padding: 24px;
-      background: #fff;
+      background: #ffffff;
       color: var(--text);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       line-height: 1.6;
@@ -32,23 +34,35 @@
     }
 
     main {
-      width: min(100%, 720px);
+      width: min(100%, 760px);
     }
 
     .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 36px;
       font-size: 22px;
       font-weight: 760;
-      margin-bottom: 34px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--accent);
     }
 
     h1 {
+      max-width: 720px;
       margin: 0 0 14px;
-      font-size: clamp(36px, 7vw, 64px);
+      font-size: clamp(38px, 7vw, 66px);
       line-height: 1.05;
       letter-spacing: 0;
     }
 
     p {
+      max-width: 650px;
       margin: 0 0 28px;
       color: var(--muted);
       font-size: 19px;
@@ -56,25 +70,50 @@
 
     form {
       display: grid;
-      gap: 16px;
-      margin-top: 30px;
+      gap: 18px;
+      margin-top: 34px;
+      padding-top: 30px;
+      border-top: 1px solid var(--border);
     }
 
     label {
       display: grid;
       gap: 8px;
-      font-weight: 650;
+      font-weight: 680;
     }
 
-    span {
+    label span,
+    .hint {
       color: var(--muted);
       font-size: 14px;
       font-weight: 500;
     }
 
+    .username-field {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      min-height: 54px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .prefix {
+      align-self: stretch;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 14px;
+      color: var(--muted);
+      background: var(--soft);
+      border-right: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
     input {
       width: 100%;
-      min-height: 52px;
+      min-height: 54px;
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 12px 14px;
@@ -83,13 +122,41 @@
       outline: none;
     }
 
-    input:focus {
+    .username-field input {
+      min-height: 52px;
+      border: 0;
+      border-radius: 0;
+    }
+
+    input:focus,
+    .username-field:focus-within {
       border-color: var(--accent);
       box-shadow: 0 0 0 4px #dbeafe;
     }
 
+    .availability {
+      min-height: 22px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .availability.ok {
+      color: var(--success);
+    }
+
+    .availability.error {
+      color: var(--danger);
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
     button {
-      justify-self: start;
       min-height: 48px;
       border: 1px solid var(--text);
       border-radius: 999px;
@@ -101,6 +168,11 @@
       cursor: pointer;
     }
 
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
     .message {
       min-height: 28px;
       color: var(--muted);
@@ -108,61 +180,163 @@
     }
 
     .message.error {
-      color: #b91c1c;
+      color: var(--danger);
     }
 
     .message.success {
-      color: #166534;
+      color: var(--success);
+    }
+
+    @media (max-width: 560px) {
+      body {
+        align-items: start;
+        padding-top: 36px;
+      }
+
+      .username-field {
+        grid-template-columns: 1fr;
+      }
+
+      .prefix {
+        min-height: 42px;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
     }
   </style>
 </head>
 <body>
   <main>
-    <div class="brand">built.at</div>
-    <h1>Claim a simple website powered by your Sheet.</h1>
+    <div class="brand"><span class="dot"></span> built.at</div>
+    <h1>Claim a name for your Sheet-powered site.</h1>
     <p>
-      Pick a username and paste the public Google Sheet link. built.at will keep
-      the clean Sheet ID behind the scenes.
+      Pick a short username, paste your public Google Sheet link, and built.at
+      will turn that Sheet into a simple website.
     </p>
 
     <form id="site-form">
       <label>
         Username
-        <span>Your site path will be built.at/username.</span>
-        <input name="username" autocomplete="username" placeholder="nathan" required>
+        <span>Use 3-24 letters and numbers. No spaces or symbols.</span>
+        <div class="username-field">
+          <div class="prefix">built.at/</div>
+          <input
+            name="username"
+            id="username"
+            autocomplete="username"
+            inputmode="latin"
+            maxlength="24"
+            pattern="[A-Za-z0-9]{3,24}"
+            placeholder="yourname"
+            required
+          >
+        </div>
+        <div class="availability" id="availability" aria-live="polite"></div>
       </label>
 
       <label>
         Public Google Sheet URL
-        <span>Use the sharing link from Google Sheets after setting it to anyone with the link can view.</span>
-        <input name="sheetUrl" inputmode="url" placeholder="https://docs.google.com/spreadsheets/d/..." required>
+        <span>In Google Sheets, share it as anyone with the link can view, then paste that link here.</span>
+        <input
+          name="sheetUrl"
+          id="sheet-url"
+          inputmode="url"
+          placeholder="https://docs.google.com/spreadsheets/d/..."
+          required
+        >
       </label>
 
-      <button type="submit">Submit site</button>
-      <div class="message" id="message" aria-live="polite"></div>
+      <div class="actions">
+        <button type="submit" id="submit-button" disabled>Claim name</button>
+        <div class="message" id="message" aria-live="polite"></div>
+      </div>
     </form>
   </main>
 
   <script>
     const form = document.getElementById("site-form");
+    const usernameInput = document.getElementById("username");
+    const sheetUrlInput = document.getElementById("sheet-url");
+    const availability = document.getElementById("availability");
     const message = document.getElementById("message");
+    const submitButton = document.getElementById("submit-button");
+
+    let availabilityTimer = 0;
+    let usernameAvailable = false;
+
+    function normalizeUsername(value) {
+      return String(value || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "");
+    }
+
+    function setAvailability(text, state) {
+      availability.textContent = text;
+      availability.className = `availability ${state || ""}`.trim();
+    }
+
+    function setMessage(text, state) {
+      message.textContent = text;
+      message.className = `message ${state || ""}`.trim();
+    }
+
+    function updateSubmitState() {
+      submitButton.disabled = !usernameAvailable || !sheetUrlInput.value.trim();
+    }
+
+    usernameInput.addEventListener("input", () => {
+      const normalized = normalizeUsername(usernameInput.value);
+
+      if (usernameInput.value !== normalized) {
+        usernameInput.value = normalized;
+      }
+
+      usernameAvailable = false;
+      updateSubmitState();
+      window.clearTimeout(availabilityTimer);
+
+      if (!normalized) {
+        setAvailability("", "");
+        return;
+      }
+
+      setAvailability("Checking...", "");
+      availabilityTimer = window.setTimeout(() => {
+        google.script.run
+          .withSuccessHandler((result) => {
+            usernameAvailable = Boolean(result.available);
+            setAvailability(result.message, result.available ? "ok" : "error");
+            updateSubmitState();
+          })
+          .withFailureHandler((error) => {
+            usernameAvailable = false;
+            setAvailability(error.message || String(error), "error");
+            updateSubmitState();
+          })
+          .checkUsername(normalized);
+      }, 300);
+    });
+
+    sheetUrlInput.addEventListener("input", updateSubmitState);
 
     form.addEventListener("submit", (event) => {
       event.preventDefault();
 
       const data = Object.fromEntries(new FormData(form));
-      message.className = "message";
-      message.textContent = "Submitting...";
+      submitButton.disabled = true;
+      setMessage("Saving...", "");
 
       google.script.run
         .withSuccessHandler((result) => {
-          message.className = "message success";
-          message.textContent = `Saved. Your path will be built.at/${result.username}.`;
+          setMessage(`Saved. Your site will be built.at/${result.username}.`, "success");
           form.reset();
+          usernameAvailable = false;
+          setAvailability("", "");
+          updateSubmitState();
         })
         .withFailureHandler((error) => {
-          message.className = "message error";
-          message.textContent = error.message || String(error);
+          setMessage(error.message || String(error), "error");
+          updateSubmitState();
         })
         .submitSite(data);
     });
