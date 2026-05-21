@@ -1123,9 +1123,9 @@
     async function renderUserPage(username, slug) {
       if (!CONFIG.masterSheetId) {
         showStatus(
-          "Connect the registry Sheet",
-          "The marketing page is ready. To enable user sites, add your public master Sheet ID to <code>CONFIG.masterSheetId</code> in <code>index.html</code>.",
-          "Master Sheet columns: username | pasted_sheet_url | sheet_id\nUser Sheet columns: content | slug"
+          "This built.at site is almost ready",
+          "The page you opened is not connected to a published site yet. The built.at homepage is available at <a href=\"/\">built-at-sheets.pages.dev</a>.",
+          ""
         );
         return;
       }
