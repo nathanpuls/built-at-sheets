@@ -24,11 +24,16 @@ Production deploys from the `main` branch to `https://built-at-sheets.pages.dev`
 
 Use a public Google Sheet with a tab named `Registry`.
 
+Current registry:
+[built.at Registry](https://docs.google.com/spreadsheets/d/1gL740Jji_spSBGuTqcoScqJOI6usz0J1vzn2s3x5hQg/edit)
+
 | username | pasted_sheet_url | sheet_id |
 | --- | --- | --- |
 | nathan | https://docs.google.com/spreadsheets/d/example/edit?usp=sharing | example |
 
-Set `CONFIG.masterSheetId` in `index.html` to the registry Sheet ID.
+The deployed app reads this Sheet ID from `CONFIG.masterSheetId` in `index.html`.
+
+For G-Viz to work in the public site, the registry Sheet and each user content Sheet need to be shared as `Anyone with the link can view`.
 
 ## User Content Sheet
 
