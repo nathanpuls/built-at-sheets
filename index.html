@@ -535,11 +535,17 @@
     }
 
     function normalizeSlug(value) {
-      const slug = String(value || "index")
+      const slug = String(value ?? "")
         .trim()
         .toLowerCase()
         .replace(/^\/+|\/+$/g, "");
       return slug || "index";
+    }
+
+    function isHeaderRow(row, expectedHeaders) {
+      return expectedHeaders.every((header, index) => {
+        return String(row[index] || "").trim().toLowerCase() === header;
+      });
     }
 
     function getRoute() {
@@ -1133,7 +1139,9 @@
       try {
         showStatus("Loading site", `Looking up <code>${escapeHtml(username)}</code> in the built.at registry.`);
         const registryData = await loadGviz(CONFIG.masterSheetId, CONFIG.masterSheetName, CONFIG.masterRange);
-        const registryRows = tableRows(registryData).slice(1);
+        const registryRows = tableRows(registryData).filter((row) => {
+          return !isHeaderRow(row, ["username", "pasted_sheet_url", "sheet_id"]);
+        });
         const match = registryRows.find((row) => String(row[0] || "").trim().toLowerCase() === username.toLowerCase());
 
         if (!match) {
@@ -1148,7 +1156,9 @@
         }
 
         const contentData = await loadGviz(userSheetId, CONFIG.userSheetName, CONFIG.userRange);
-        const contentRows = tableRows(contentData);
+        const contentRows = tableRows(contentData).filter((row) => {
+          return !isHeaderRow(row, ["content", "slug"]);
+        });
         const page = contentRows.find((row) => normalizeSlug(row[1]) === slug);
 
         if (!page) {
