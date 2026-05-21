@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://docs.google.com">
   <title>built.at | Modern websites. Fewer monthly fees. More control.</title>
   <style>
     :root {
@@ -509,6 +510,7 @@
       masterRange: "A:C",
       userSheetName: "Sheet1",
       userRange: "A:D",
+      cacheMs: 30000,
       allowRawHtml: true
     };
 
@@ -557,14 +559,16 @@
     }
 
     async function loadGviz(sheetId, sheetName, range) {
+      const cacheKey = `builtAt:gViz:${sheetId}:${sheetName}:${range}`;
+      const cached = readCache(cacheKey);
+      if (cached) return cached;
+
       const url =
         `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq` +
         `?tqx=${encodeURIComponent("out:json")}` +
         `&sheet=${encodeURIComponent(sheetName)}` +
         `&range=${encodeURIComponent(range)}`;
-      const response = await fetch(url, {
-        cache: "no-store"
-      });
+      const response = await fetch(url);
 
       if (!response.ok) {
         throw new Error(`Google Sheets returned HTTP ${response.status}.`);
@@ -580,7 +584,28 @@
         throw new Error(data.errors?.map((error) => error.detailed_message || error.message).join("; ") || "Google Sheets returned an error.");
       }
 
+      writeCache(cacheKey, data);
       return data;
+    }
+
+    function readCache(key) {
+      try {
+        const cached = JSON.parse(localStorage.getItem(key) || "null");
+        if (!cached || Date.now() - cached.cachedAt > CONFIG.cacheMs) return null;
+        return cached.data;
+      } catch {
+        return null;
+      }
+    }
+
+    function writeCache(key, data) {
+      try {
+        localStorage.setItem(key, JSON.stringify({
+          cachedAt: Date.now(),
+          data
+        }));
+      } catch {
+      }
     }
 
     function tableRows(data) {
