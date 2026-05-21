@@ -32,7 +32,23 @@ export async function onRequestPost({ request }) {
       })
     });
     const text = await response.text();
-    const result = JSON.parse(text);
+    let result;
+
+    try {
+      result = JSON.parse(text);
+    } catch {
+      if (text.includes("Script function not found: doPost")) {
+        return json({
+          ok: false,
+          message: "The registration backend needs to be redeployed."
+        }, { status: 502 });
+      }
+
+      return json({
+        ok: false,
+        message: "The registration backend returned an unexpected response."
+      }, { status: 502 });
+    }
 
     if (!response.ok || !result.ok) {
       return json({
