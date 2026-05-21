@@ -510,6 +510,7 @@
       masterRange: "A:F",
       userSheetName: "Sheet1",
       userRange: "A:D",
+      signupUrl: "https://script.google.com/macros/s/AKfycbzRDNrYYSEdu4pXTVMRtjuVmRzJK9htqPkgj6wyvG2nG_CEkv5nW6Q2zKIbu7DCHJSy/exec",
       cacheMs: 30000,
       allowRawHtml: true
     };
@@ -1035,7 +1036,7 @@
               <a href="#control">Control</a>
               <a href="#pricing">Pricing</a>
             </nav>
-            <a href="#contact" class="button">Start a project</a>
+            <a href="${CONFIG.signupUrl}" class="button">Claim a name</a>
           </div>
         </header>
 
@@ -1049,7 +1050,7 @@
                 a simpler way to publish: edit a spreadsheet, update a site.
               </p>
               <div class="hero-actions">
-                <a href="#contact" class="button">Get a website review</a>
+                <a href="${CONFIG.signupUrl}" class="button">Claim a name</a>
                 <a href="#why" class="button secondary">See how it works</a>
               </div>
             </div>
@@ -1133,7 +1134,7 @@
                 Send your current website and built.at will review whether a lower-maintenance setup
                 makes sense for your business.
               </p>
-              <a href="mailto:hello@built.at" class="button">Email built.at</a>
+              <a href="${CONFIG.signupUrl}" class="button">Claim a name</a>
             </div>
           </section>
         </main>
