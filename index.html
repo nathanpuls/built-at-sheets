@@ -38,6 +38,10 @@
       text-rendering: optimizeLegibility;
     }
 
+    html.redirecting body {
+      visibility: hidden;
+    }
+
     a {
       color: inherit;
       text-decoration: none;
@@ -841,6 +845,12 @@
       return "";
     }
 
+    function redirectSilently(url) {
+      app.textContent = "";
+      document.documentElement.classList.add("redirecting");
+      window.location.replace(url);
+    }
+
     function markdownToHtml(markdown) {
       const lines = String(markdown).replace(/\r\n/g, "\n").split("\n");
       const html = [];
@@ -1563,7 +1573,7 @@
 
         const redirectUrl = getRedirectUrl(content);
         if (redirectUrl) {
-          window.location.replace(redirectUrl);
+          redirectSilently(redirectUrl);
           return;
         }
 
