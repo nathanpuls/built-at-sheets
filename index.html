@@ -164,6 +164,40 @@
       flex-wrap: wrap;
     }
 
+    .starter {
+      padding: 34px 0;
+      border-top: 1px solid var(--border);
+      background: var(--soft);
+    }
+
+    .starter-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .starter h2 {
+      margin: 0 0 6px;
+      font-size: clamp(24px, 3vw, 34px);
+      line-height: 1.12;
+    }
+
+    .starter p {
+      margin: 0;
+      max-width: 640px;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .starter-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
     .section {
       padding: 72px 0;
       border-top: 1px solid var(--border);
@@ -566,7 +600,19 @@
     }
 
     .claim-template-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
       margin-top: 18px;
+    }
+
+    .claim-template-preview {
+      color: var(--muted);
+      font-weight: 650;
+      font-size: 15px;
+      text-decoration: underline;
+      text-underline-offset: 0.22em;
     }
 
     .claim-form {
@@ -726,6 +772,7 @@
       userRange: "A:D",
       signupUrl: "/app/claim",
       templateUrl: "https://docs.google.com/spreadsheets/d/102t_BkHXsSCLFgyKJma5l62bnngHUaI69fquUp6xnxs/copy",
+      templatePreviewUrl: "https://docs.google.com/spreadsheets/d/102t_BkHXsSCLFgyKJma5l62bnngHUaI69fquUp6xnxs/edit?usp=sharing",
       cacheMs: 5000,
       allowRawHtml: true
     };
@@ -1253,6 +1300,7 @@
           <div class="container nav">
             <a href="/" class="logo">built.at</a>
             <nav class="nav-links">
+              <a href="#starter">Template</a>
               <a href="#why">Why built.at</a>
               <a href="#control">Control</a>
               <a href="#pricing">Pricing</a>
@@ -1273,6 +1321,22 @@
               <div class="hero-actions">
                 <a href="${CONFIG.signupUrl}" class="button">Claim a name</a>
                 <a href="#why" class="button secondary">See how it works</a>
+              </div>
+            </div>
+          </section>
+
+          <section class="starter" id="starter">
+            <div class="container starter-inner">
+              <div>
+                <h2>Start with the built.at starter template.</h2>
+                <p>
+                  Preview the Sheet before you copy it, then use the same rows to try Markdown,
+                  plain text, HTML, and redirects.
+                </p>
+              </div>
+              <div class="starter-actions">
+                <a href="${CONFIG.templateUrl}" class="button" target="_blank" rel="noopener">Make a copy</a>
+                <a href="${CONFIG.templatePreviewUrl}" class="button secondary" target="_blank" rel="noopener">See the template first</a>
               </div>
             </div>
           </section>
@@ -1387,6 +1451,7 @@
                   <span>Use the built.at starter format with content in column A and slugs in column B.</span>
                   <div class="claim-template-actions">
                     <a href="${CONFIG.templateUrl}" class="button secondary" target="_blank" rel="noopener">Make a copy</a>
+                    <a href="${CONFIG.templatePreviewUrl}" class="claim-template-preview" target="_blank" rel="noopener">See the template first</a>
                   </div>
                 </div>
               </li>

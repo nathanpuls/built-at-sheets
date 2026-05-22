@@ -113,6 +113,10 @@
     }
 
     .template-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
       margin-top: 18px;
     }
 
@@ -129,6 +133,17 @@
       font-weight: 700;
       line-height: 1.2;
       text-decoration: none;
+    }
+
+    .template-actions .template-preview {
+      border: 0;
+      min-height: auto;
+      padding: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 15px;
+      text-decoration: underline;
+      text-underline-offset: 0.22em;
     }
 
     form {
@@ -291,6 +306,7 @@
           <span>Use the built.at starter format with content in column A and slugs in column B.</span>
           <div class="template-actions">
             <a href="https://docs.google.com/spreadsheets/d/102t_BkHXsSCLFgyKJma5l62bnngHUaI69fquUp6xnxs/copy" target="_blank" rel="noopener">Make a copy</a>
+            <a class="template-preview" href="https://docs.google.com/spreadsheets/d/102t_BkHXsSCLFgyKJma5l62bnngHUaI69fquUp6xnxs/edit?usp=sharing" target="_blank" rel="noopener">See the template first</a>
           </div>
         </div>
       </li>
