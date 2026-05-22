@@ -21,24 +21,45 @@ Production deploys from the `main` branch to `https://built-at-sheets.pages.dev`
 - `/:username` renders the user's `index` page.
 - `/:username/:slug` renders the matching slug from the user's Sheet.
 
-## Master Registry Sheet
+## D1 Registry
 
-Use a public Google Sheet with a tab named `Registry`.
+The built.at registry lives in Cloudflare D1. Google Sheets are only used for
+user site content.
 
-Current registry:
-[built.at Registry](https://docs.google.com/spreadsheets/d/1gL740Jji_spSBGuTqcoScqJOI6usz0J1vzn2s3x5hQg/edit)
+Cloudflare Pages Functions expect a D1 binding named `REGISTRY_DB`.
 
-| username | pasted_sheet_url | sheet_id | hidden | created_at | updated_at |
-| --- | --- | --- | --- | --- | --- |
-| nathan | https://docs.google.com/spreadsheets/d/example/edit?usp=sharing | example | FALSE | 2026-05-21 1:00 PM | 2026-05-21 1:00 PM |
+The registry table is:
 
-The deployed app reads this Sheet ID from `CONFIG.masterSheetId` in `index.html`.
+| username | sheet_url | sheet_id | hidden | active | created_at | updated_at |
+| --- | --- | --- | --- | --- | --- | --- |
+| test | https://docs.google.com/spreadsheets/d/example/edit?usp=sharing | example | 0 | 1 | 2026-05-21T00:00:00.000Z | 2026-05-21T00:00:00.000Z |
 
-For G-Viz to work in the public site, the registry Sheet and each user content Sheet need to be shared as `Anyone with the link can view`.
+Setup:
+
+```bash
+npx wrangler d1 create built-at-registry
+npx wrangler d1 execute built-at-registry --file migrations/0001_create_sites.sql --remote
+npx wrangler d1 execute built-at-registry --file seeds/registry.sql --remote
+```
+
+Then add the D1 database to the Cloudflare Pages project as the `REGISTRY_DB`
+binding, or copy `wrangler.example.toml` to `wrangler.toml` and fill in the
+real database IDs.
+
+For quick manual admin changes, use the D1 table editor in Cloudflare or run:
+
+```bash
+npx wrangler d1 execute built-at-registry --remote --command "UPDATE sites SET hidden = 1, updated_at = datetime('now') WHERE username = 'test4'"
+npx wrangler d1 execute built-at-registry --remote --command "UPDATE sites SET hidden = 0, updated_at = datetime('now') WHERE username = 'test4'"
+```
 
 ## User Content Sheet
 
-Each user Sheet should be shared as `Anyone with the link can view`.
+Users should start by copying the template Sheet, editing their copy, and sharing
+that copy as `Anyone with the link can view` before claiming a built.at name.
+
+Template:
+https://docs.google.com/spreadsheets/d/102t_BkHXsSCLFgyKJma5l62bnngHUaI69fquUp6xnxs/copy
 
 | content | slug |
 | --- | --- |
@@ -52,14 +73,20 @@ Column A can be HTML, Markdown, or a simple redirect URL. Column B is the page s
 
 The public signup form is served by Cloudflare Pages at `/app/claim`.
 
+The intended signup flow is:
+
+1. Copy the template Sheet.
+2. Make the copied Sheet public as `Anyone with the link can view`.
+3. Choose a username and paste the public copied Sheet URL.
+
 Cloudflare Pages Functions handle:
 
 - `/api/check-username`
 - `/api/register`
+- `/api/site`
 
-The `apps-script` folder contains the private backend that writes registrations into the active spreadsheet's `Registry` tab.
-
-Open Apps Script from the registry Sheet, add `Code.gs`, then deploy as a web app. Users do not visit the Apps Script URL directly.
+The `apps-script` folder is legacy and is no longer needed for the registry
+once D1 is bound in Cloudflare.
 
 Username rules:
 

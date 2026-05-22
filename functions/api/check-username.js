@@ -1,10 +1,11 @@
-import { json, normalizeUsername, usernameExists, validateUsername } from "./_shared.js";
+import { getRegistryDb, json, normalizeUsername, usernameExists, validateUsername } from "./_shared.js";
 
-export async function onRequestGet({ request }) {
+export async function onRequestGet({ env, request }) {
   try {
     const url = new URL(request.url);
     const username = normalizeUsername(url.searchParams.get("username"));
     const validationMessage = validateUsername(username);
+    const db = getRegistryDb(env);
 
     if (validationMessage) {
       return json({
@@ -14,7 +15,7 @@ export async function onRequestGet({ request }) {
       });
     }
 
-    if (await usernameExists(username)) {
+    if (await usernameExists(db, username)) {
       return json({
         available: false,
         username,
@@ -28,6 +29,7 @@ export async function onRequestGet({ request }) {
       message: `${username} is available.`
     });
   } catch (error) {
+    console.error(error);
     return json({
       available: false,
       message: "Could not check that name right now."

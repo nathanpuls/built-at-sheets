@@ -68,10 +68,73 @@
       font-size: 19px;
     }
 
+    .steps {
+      display: grid;
+      gap: 12px;
+      margin: 32px 0 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: step;
+    }
+
+    .steps li {
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+      counter-increment: step;
+    }
+
+    .steps li::before {
+      content: counter(step);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-weight: 760;
+      font-size: 14px;
+    }
+
+    .steps strong {
+      display: block;
+      margin-bottom: 2px;
+      font-size: 16px;
+    }
+
+    .steps span {
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .template-actions {
+      margin-top: 18px;
+    }
+
+    .template-actions a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 11px 18px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--text);
+      font-weight: 700;
+      line-height: 1.2;
+      text-decoration: none;
+    }
+
     form {
       display: grid;
       gap: 18px;
-      margin-top: 34px;
+      margin-top: 24px;
       padding-top: 30px;
       border-top: 1px solid var(--border);
     }
@@ -208,11 +271,35 @@
 <body>
   <main>
     <div class="brand"><span class="dot"></span> built.at</div>
-    <h1>Claim a name for your Sheet-powered site.</h1>
+    <h1>Connect your Sheet to a built.at name.</h1>
     <p>
-      Pick a short username, paste your public Google Sheet link, and built.at
-      will turn that Sheet into a simple website.
+      Start with the template, make your copy public, then paste the link here
+      to publish it at your own built.at URL.
     </p>
+
+    <ol class="steps">
+      <li>
+        <div>
+          <strong>Copy the template Sheet</strong>
+          <span>Use the built.at starter format with content in column A and slugs in column B.</span>
+          <div class="template-actions">
+            <a href="https://docs.google.com/spreadsheets/d/102t_BkHXsSCLFgyKJma5l62bnngHUaI69fquUp6xnxs/copy" target="_blank" rel="noopener">Copy template</a>
+          </div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Make your copy public</strong>
+          <span>In Google Sheets, choose Share, then set general access to anyone with the link can view.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Claim your built.at name</strong>
+          <span>Choose a username and paste the public link from your copied Sheet.</span>
+        </div>
+      </li>
+    </ol>
 
     <form id="site-form">
       <label>
@@ -236,7 +323,7 @@
 
       <label>
         Public Google Sheet URL
-        <span>In Google Sheets, share it as anyone with the link can view, then paste that link here.</span>
+        <span>Paste the link from the public copy of your template Sheet.</span>
         <input
           name="sheetUrl"
           id="sheet-url"

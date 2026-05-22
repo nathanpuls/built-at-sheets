@@ -1,7 +1,3 @@
-export const REGISTRY_SHEET_ID = "1gL740Jji_spSBGuTqcoScqJOI6usz0J1vzn2s3x5hQg";
-export const REGISTRY_SHEET_NAME = "Registry";
-export const REGISTRY_RANGE = "A:F";
-export const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzRDNrYYSEdu4pXTVMRtjuVmRzJK9htqPkgj6wyvG2nG_CEkv5nW6Q2zKIbu7DCHJSy/exec";
 export const RESERVED_USERNAMES = new Set(["app", "api", "admin", "www", "mail", "help", "support", "claim", "login", "signup"]);
 
 export function json(data, init = {}) {
@@ -36,40 +32,55 @@ export function extractSheetId(value) {
   return "";
 }
 
-export async function getRegistryRows() {
-  const url =
-    `https://docs.google.com/spreadsheets/d/${REGISTRY_SHEET_ID}/gviz/tq` +
-    `?tqx=${encodeURIComponent("out:json")}` +
-    `&sheet=${encodeURIComponent(REGISTRY_SHEET_NAME)}` +
-    `&range=${encodeURIComponent(REGISTRY_RANGE)}`;
-  const response = await fetch(url, {
-    cf: {
-      cacheTtl: 10,
-      cacheEverything: true
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error(`Registry lookup failed with HTTP ${response.status}.`);
+export function getRegistryDb(env) {
+  if (!env?.REGISTRY_DB) {
+    throw new Error("REGISTRY_DB D1 binding is not configured.");
   }
 
-  const text = await response.text();
-  const jsonText = text
-    .replace(/^[\s\S]*?google\.visualization\.Query\.setResponse\(/, "")
-    .replace(/\);\s*$/, "");
-  const data = JSON.parse(jsonText);
-
-  if (data.status === "error") {
-    throw new Error(data.errors?.map((error) => error.detailed_message || error.message).join("; ") || "Google Sheets returned an error.");
-  }
-
-  return (data.table?.rows || []).map((row) => (row.c || []).map((cell) => cell?.v ?? ""));
+  return env.REGISTRY_DB;
 }
 
-export async function usernameExists(username) {
-  const rows = await getRegistryRows();
-  return rows.some((row, index) => {
-    if (index === 0 && String(row[0] || "").trim().toLowerCase() === "username") return false;
-    return String(row[0] || "").trim().toLowerCase() === username;
-  });
+export function booleanValue(value) {
+  if (value === true || value === 1) return true;
+  if (value === false || value === 0 || value === null || value === undefined) return false;
+  return ["1", "true", "yes"].includes(String(value).trim().toLowerCase());
+}
+
+export function serializeSite(row, options = {}) {
+  if (!row) return null;
+
+  const site = {
+    username: row.username,
+    hidden: booleanValue(row.hidden),
+    active: booleanValue(row.active),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+
+  if (options.includeSheet || (!site.hidden && site.active)) {
+    site.sheetUrl = row.sheet_url;
+    site.sheetId = row.sheet_id;
+  }
+
+  return site;
+}
+
+export async function getSiteByUsername(db, username) {
+  return db
+    .prepare(
+      `SELECT username, sheet_url, sheet_id, hidden, active, created_at, updated_at
+       FROM sites
+       WHERE username = ?`
+    )
+    .bind(username)
+    .first();
+}
+
+export async function usernameExists(db, username) {
+  const row = await db
+    .prepare("SELECT 1 AS found FROM sites WHERE username = ?")
+    .bind(username)
+    .first();
+
+  return Boolean(row);
 }

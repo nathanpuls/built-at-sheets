@@ -517,10 +517,58 @@
       font-size: 19px;
     }
 
+    .claim-steps {
+      display: grid;
+      gap: 12px;
+      margin: 32px 0 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: claim-step;
+    }
+
+    .claim-steps li {
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+      counter-increment: claim-step;
+    }
+
+    .claim-steps li::before {
+      content: counter(claim-step);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent-dark);
+      font-weight: 760;
+      font-size: 14px;
+    }
+
+    .claim-steps strong {
+      display: block;
+      margin-bottom: 2px;
+      font-size: 16px;
+    }
+
+    .claim-steps span {
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .claim-template-actions {
+      margin-top: 18px;
+    }
+
     .claim-form {
       display: grid;
       gap: 18px;
-      margin-top: 34px;
+      margin-top: 24px;
       padding-top: 30px;
       border-top: 1px solid var(--border);
     }
@@ -662,12 +710,11 @@
 
   <script>
     const CONFIG = {
-      masterSheetId: "1gL740Jji_spSBGuTqcoScqJOI6usz0J1vzn2s3x5hQg",
-      masterSheetName: "Registry",
-      masterRange: "A:F",
+      siteApiUrl: "/api/site",
       userSheetName: "Sheet1",
       userRange: "A:D",
       signupUrl: "/app/claim",
+      templateUrl: "https://docs.google.com/spreadsheets/d/102t_BkHXsSCLFgyKJma5l62bnngHUaI69fquUp6xnxs/copy",
       cacheMs: 30000,
       allowRawHtml: true
     };
@@ -706,10 +753,6 @@
       return expectedHeaders.every((header, index) => {
         return String(row[index] || "").trim().toLowerCase() === header;
       });
-    }
-
-    function booleanCell(value) {
-      return String(value || "").trim().toLowerCase() === "true";
     }
 
     function getRoute() {
@@ -1314,11 +1357,35 @@
         <main class="claim-shell">
           <section class="claim-content">
             <a class="claim-brand" href="/"><span class="claim-dot"></span> built.at</a>
-            <h1>Claim a name for your Sheet-powered site.</h1>
+            <h1>Connect your Sheet to a built.at name.</h1>
             <p>
-              Pick a short username, paste your public Google Sheet link, and built.at
-              will turn that Sheet into a simple website.
+              Start with the template, make your copy public, then paste the link here
+              to publish it at your own built.at URL.
             </p>
+
+            <ol class="claim-steps">
+              <li>
+                <div>
+                  <strong>Copy the template Sheet</strong>
+                  <span>Use the built.at starter format with content in column A and slugs in column B.</span>
+                  <div class="claim-template-actions">
+                    <a href="${CONFIG.templateUrl}" class="button secondary" target="_blank" rel="noopener">Copy template</a>
+                  </div>
+                </div>
+              </li>
+              <li>
+                <div>
+                  <strong>Make your copy public</strong>
+                  <span>In Google Sheets, choose Share, then set general access to anyone with the link can view.</span>
+                </div>
+              </li>
+              <li>
+                <div>
+                  <strong>Claim your built.at name</strong>
+                  <span>Choose a username and paste the public link from your copied Sheet.</span>
+                </div>
+              </li>
+            </ol>
 
             <form class="claim-form" id="claim-form">
               <label>
@@ -1333,7 +1400,7 @@
 
               <label>
                 Public Google Sheet URL
-                <span>In Google Sheets, share it as anyone with the link can view, then paste that link here.</span>
+                <span>Paste the link from the public copy of your template Sheet.</span>
                 <input name="sheetUrl" id="claim-sheet-url" inputmode="url" placeholder="https://docs.google.com/spreadsheets/d/..." required>
               </label>
 
@@ -1439,41 +1506,29 @@
     }
 
     async function renderUserPage(username, slug) {
-      if (!CONFIG.masterSheetId) {
-        showStatus(
-          "This built.at site is almost ready",
-          "The page you opened is not connected to a published site yet. The built.at homepage is available at <a href=\"/\">built-at-sheets.pages.dev</a>.",
-          ""
-        );
-        return;
-      }
-
       try {
-        const registryData = await loadGviz(CONFIG.masterSheetId, CONFIG.masterSheetName, CONFIG.masterRange);
-        const rawRegistryRows = tableRows(registryData);
-        const headerRow = rawRegistryRows.find((row) => isHeaderRow(row, ["username", "pasted_sheet_url", "sheet_id"])) || [];
-        const hiddenColumn = headerRow.findIndex((cell) => String(cell || "").trim().toLowerCase() === "hidden");
-        const activeColumn = headerRow.findIndex((cell) => String(cell || "").trim().toLowerCase() === "active");
-        const registryRows = rawRegistryRows.filter((row) => {
-          return !isHeaderRow(row, ["username", "pasted_sheet_url", "sheet_id"]);
-        });
-        const match = registryRows.find((row) => String(row[0] || "").trim().toLowerCase() === username.toLowerCase());
+        const siteResponse = await fetch(`${CONFIG.siteApiUrl}?username=${encodeURIComponent(username)}`);
+        const siteResult = await siteResponse.json();
 
-        if (!match) {
+        if (siteResponse.status === 404) {
           showStatus("Site not found", `No active built.at site was found for <code>${escapeHtml(username)}</code>.`);
           return;
         }
 
-        const isHidden = hiddenColumn >= 0 && booleanCell(match[hiddenColumn]);
-        const isInactive = activeColumn >= 0 && !booleanCell(match[activeColumn]);
-        if (isHidden || isInactive) {
+        if (!siteResponse.ok || !siteResult.ok) {
+          throw new Error(siteResult.message || "Could not load that site.");
+        }
+
+        const site = siteResult.site;
+
+        if (site.hidden || !site.active) {
           showStatus("Site not available", `This built.at site is not currently public.`);
           return;
         }
 
-        const userSheetId = extractSheetId(match[2]) || extractSheetId(match[1]);
+        const userSheetId = extractSheetId(site.sheetId) || extractSheetId(site.sheetUrl);
         if (!userSheetId) {
-          showStatus("User Sheet is missing", `The registry row for <code>${escapeHtml(username)}</code> does not include a valid Google Sheet URL or Sheet ID.`);
+          showStatus("User Sheet is missing", `The registry entry for <code>${escapeHtml(username)}</code> does not include a valid Google Sheet URL or Sheet ID.`);
           return;
         }
 

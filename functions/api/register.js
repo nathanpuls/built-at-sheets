@@ -1,12 +1,13 @@
-import { APPS_SCRIPT_URL, extractSheetId, json, normalizeUsername, usernameExists, validateUsername } from "./_shared.js";
+import { extractSheetId, getRegistryDb, json, normalizeUsername, usernameExists, validateUsername } from "./_shared.js";
 
-export async function onRequestPost({ request }) {
+export async function onRequestPost({ env, request }) {
   try {
     const payload = await request.json();
     const username = normalizeUsername(payload.username);
     const validationMessage = validateUsername(username);
     const sheetUrl = String(payload.sheetUrl || "").trim();
     const sheetId = extractSheetId(sheetUrl);
+    const db = getRegistryDb(env);
 
     if (validationMessage) {
       return json({ ok: false, message: validationMessage }, { status: 400 });
@@ -16,49 +17,32 @@ export async function onRequestPost({ request }) {
       return json({ ok: false, message: "Paste a valid public Google Sheet sharing URL." }, { status: 400 });
     }
 
-    if (await usernameExists(username)) {
+    if (await usernameExists(db, username)) {
       return json({ ok: false, message: "That name is already taken." }, { status: 409 });
     }
 
-    const response = await fetch(APPS_SCRIPT_URL, {
-      method: "POST",
-      headers: {
-        "content-type": "text/plain;charset=utf-8"
-      },
-      body: JSON.stringify({
-        action: "register",
-        username,
-        sheetUrl
-      })
+    const now = new Date().toISOString();
+
+    await db
+      .prepare(
+        `INSERT INTO sites (username, sheet_url, sheet_id, hidden, active, created_at, updated_at)
+         VALUES (?, ?, ?, 0, 1, ?, ?)`
+      )
+      .bind(username, sheetUrl, sheetId, now, now)
+      .run();
+
+    return json({
+      ok: true,
+      username,
+      sheetId,
+      url: `https://built.at/${username}`
     });
-    const text = await response.text();
-    let result;
-
-    try {
-      result = JSON.parse(text);
-    } catch {
-      if (text.includes("Script function not found: doPost")) {
-        return json({
-          ok: false,
-          message: "The registration backend needs to be redeployed."
-        }, { status: 502 });
-      }
-
-      return json({
-        ok: false,
-        message: "The registration backend returned an unexpected response."
-      }, { status: 502 });
-    }
-
-    if (!response.ok || !result.ok) {
-      return json({
-        ok: false,
-        message: result.message || "Could not claim that name."
-      }, { status: response.ok ? 400 : response.status });
-    }
-
-    return json(result);
   } catch (error) {
+    if (String(error?.message || error).includes("UNIQUE constraint failed")) {
+      return json({ ok: false, message: "That name is already taken." }, { status: 409 });
+    }
+
+    console.error(error);
     return json({
       ok: false,
       message: "Could not claim that name right now."

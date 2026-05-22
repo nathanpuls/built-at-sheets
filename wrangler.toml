@@ -1,0 +1,8 @@
+name = "built-at-sheets"
+compatibility_date = "2026-05-21"
+pages_build_output_dir = "."
+
+[[d1_databases]]
+binding = "REGISTRY_DB"
+database_name = "built-at-registry"
+database_id = "0b59d198-b9eb-45a7-9666-a231ef6d7185"

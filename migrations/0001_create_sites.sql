@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS sites (
+  username TEXT PRIMARY KEY,
+  sheet_url TEXT NOT NULL,
+  sheet_id TEXT NOT NULL,
+  hidden INTEGER NOT NULL DEFAULT 0,
+  active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_sites_active ON sites (active);
+CREATE INDEX IF NOT EXISTS idx_sites_hidden ON sites (hidden);
