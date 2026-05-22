@@ -250,6 +250,13 @@
       color: var(--success);
     }
 
+    .message a {
+      color: inherit;
+      font-weight: 700;
+      text-decoration: underline;
+      text-underline-offset: 0.22em;
+    }
+
     @media (max-width: 560px) {
       body {
         align-items: start;
@@ -362,8 +369,22 @@
       availability.className = `availability ${state || ""}`.trim();
     }
 
-    function setMessage(text, state) {
-      message.textContent = text;
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[char]);
+    }
+
+    function setMessage(text, state, html = false) {
+      if (html) {
+        message.innerHTML = text;
+      } else {
+        message.textContent = text;
+      }
       message.className = `message ${state || ""}`.trim();
     }
 
@@ -415,7 +436,8 @@
 
       google.script.run
         .withSuccessHandler((result) => {
-          setMessage(`Saved. Your site will be built.at/${result.username}.`, "success");
+          const siteUrl = result.url || `https://built.at/${result.username}`;
+          setMessage(`Saved. Your site will be <a href="${escapeHtml(siteUrl)}">${escapeHtml(siteUrl.replace(/^https?:\/\//, ""))}</a>.`, "success", true);
           form.reset();
           usernameAvailable = false;
           setAvailability("", "");

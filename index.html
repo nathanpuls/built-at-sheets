@@ -665,6 +665,13 @@
       font-size: 15px;
     }
 
+    .claim-message a {
+      color: inherit;
+      font-weight: 680;
+      text-decoration: underline;
+      text-underline-offset: 0.22em;
+    }
+
     @media (max-width: 800px) {
       .nav-links {
         display: none;
@@ -1435,8 +1442,12 @@
         availability.className = `claim-availability ${state || ""}`.trim();
       }
 
-      function setMessage(text, state) {
-        message.textContent = text;
+      function setMessage(text, state, html = false) {
+        if (html) {
+          message.innerHTML = text;
+        } else {
+          message.textContent = text;
+        }
         message.className = `claim-message ${state || ""}`.trim();
       }
 
@@ -1493,7 +1504,8 @@
             throw new Error(result.message || "Could not claim that name.");
           }
 
-          setMessage(`Saved. Your site will be built.at/${result.username}.`, "success");
+          const siteUrl = result.url || `https://built.at/${result.username}`;
+          setMessage(`Saved. Your site will be <a href="${escapeHtml(siteUrl)}">${escapeHtml(siteUrl.replace(/^https?:\/\//, ""))}</a>.`, "success", true);
           form.reset();
           usernameAvailable = false;
           setAvailability("", "");
